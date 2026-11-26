@@ -85,6 +85,22 @@ jobs:
       - name: Write server.properties
         run: cp server.properties.example server.properties
 
+      - name: Prepare release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > SignKey.jks
+          {
+            echo "storeFile=SignKey.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > keystore.properties
+          ls -l SignKey.jks keystore.properties
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
