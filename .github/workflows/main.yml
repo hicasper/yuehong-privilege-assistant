@@ -114,9 +114,15 @@ jobs:
         if: always()
         run: |
           mkdir -p artifacts
-          # Runner 默认 locale 不是 UTF-8，中文文件名会被 cp 丢成空串，统一改成 ASCII 名
+          declare -A seen
           i=0
-          find out/apk -name '*.apk' -type f -print0 | while IFS= read -r -d '' f; do
+          find . -name '*.apk' -type f -print0 | while IFS= read -r -d '' f; do
+            h=$(sha256sum "$f" | awk '{print $1}')
+            if [ -n "${seen[$h]:-}" ]; then
+              echo "skip duplicate: $f"
+              continue
+            fi
+            seen[$h]=1
             i=$((i+1))
             VER=$(grep -oE 'yuehongVersionName = "[^"]+"' build.gradle | grep -oE 'v[0-9.]+' | head -1)
             cp "$f" "artifacts/yuehong-${VER:-unknown}-${i}.apk"
